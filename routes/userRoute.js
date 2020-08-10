@@ -343,16 +343,16 @@ const getUserProfileByName = {
 let user = [
   // register,
   login,
-  editUser,
-  logout,
-  getUserList,
-  getUserProfile,
-  markDeleteOrObsolete,
-  getUserListByRole,
-  changePassword,
-  getUserListOfManager,
-  getUserProfileById,
-  getUserProfileByName,
+  // editUser,
+  // logout,
+  // getUserList,
+  // getUserProfile,
+  // markDeleteOrObsolete,
+  // getUserListByRole,
+  // changePassword,
+  // getUserListOfManager,
+  // getUserProfileById,
+  // getUserProfileByName,
 ];
 
 module.exports = user;

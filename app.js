@@ -39,6 +39,13 @@ const Routes = require("./routes");
       console.log("err", err);
     }
 
+    server.route({
+      method: 'GET',
+      path: '/',
+      handler: (req, h) => {
+          return '<h1>Please append /documentation in url for opening swagger link</h1>'
+      }
+    })
     server.route(Routes);
   } catch (err) {
     console.error(err);
