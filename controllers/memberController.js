@@ -10,7 +10,11 @@ module.exports = {
         return authenticatedUser;
       }
       const checkIfMemberExists = await ifMemberExists(req.mobile);
-      console.log("!ifMemberExists(req.mobile):", req.mobile, checkIfMemberExists);
+      console.log(
+        "!ifMemberExists(req.mobile):",
+        req.mobile,
+        checkIfMemberExists
+      );
 
       if (!checkIfMemberExists) {
         const sql =
@@ -47,11 +51,14 @@ module.exports = {
         return authenticatedUser;
       }
       if (req.mobile) {
-        const checkIfMemberExists = await ifMemberExists(req.mobile);
-        if (!checkIfMemberExists) {
+        const checkIfMobileNumberExists = await ifMobileNumberExists(
+          req.mobile,
+          req.memberId
+        );
+        if (!checkIfMobileNumberExists) {
           let sql = `UPDATE members SET firstName='${req.firstName}',lastName='${req.lastName}',mobile='${req.mobile}',emailId='${req.emailId}',dateOfBirth='${req.dateOfBirth}' WHERE id=${req.memberId}`;
           console.log("sql:", sql);
-          
+
           await dbHandle.preparedQuery(sql);
           return Utilities.sendSuccess(
             APP_CONSTANTS.STATUS_MSG.SUCCESS.PROFILE_UPDATED,
@@ -145,7 +152,12 @@ const ifMemberExists = async (mobile) => {
   const sql = `SELECT * FROM members WHERE mobile = ?`;
   const params = [mobile];
   const data = await dbHandle.preparedQuery(sql, params);
-  console.log("data:", data, data.length > 0 ? true : false);
-  
   return data.length > 0 ? true : false;
+};
+
+const ifMobileNumberExists = async (mobile, memberId) => {
+  const sql = `SELECT * FROM members WHERE mobile = ?`;
+  const params = [mobile];
+  const data = await dbHandle.preparedQuery(sql, params);
+  return data.length ? (data[0].id == memberId ? false : true) : false;
 };
