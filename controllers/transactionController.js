@@ -1,6 +1,7 @@
 const Utilities = require("../utils/utilities");
 const APP_CONSTANTS = require("../config/appConstants");
 const dbHandle = require("../utils/mySqlConnect").mysql;
+const moment = require("moment");
 
 module.exports = {
   add: async (auth, req) => {
@@ -102,6 +103,44 @@ module.exports = {
       return Utilities.sendSuccess(
         APP_CONSTANTS.STATUS_MSG.SUCCESS.RECORDS_DELETED,
         {}
+      );
+    } catch (e) {
+      console.log("ERROR", e);
+      const errorObject = JSON.parse(Utilities.sendError(e));
+      return errorObject.output.payload;
+    }
+  },
+
+  getAllTransactions: async (auth, req) => {
+    try {
+      const authenticatedUser = await Utilities.authenticateUser(auth);
+      if (authenticatedUser.hasOwnProperty("statusCode")) {
+        return authenticatedUser;
+      }
+      let sql = `SELECT * FROM transactions`;
+      let params;
+      if (req.memberId) {
+        sql += ` WHERE memberId = ?`;
+        params = [req.memberId];
+      }
+      if (req.startDate && req.endDate) {
+        const startDate = moment(req.startDate).format("YYYY-MM-DD");
+        const endDate = moment(req.endDate).format("YYYY-MM-DD");
+        if (req.memberId) {
+          sql += ` AND`;
+        } else {
+          sql += ` WHERE`;
+        }
+        sql += ` cast(createdAt as date) BETWEEN '${startDate}' AND '${endDate}'`;
+      }
+
+      sql += ` ORDER BY createdAt DESC LIMIT 50`;
+      console.log(sql, params);
+
+      const data = await dbHandle.preparedQuery(sql, params);
+      return Utilities.sendSuccess(
+        APP_CONSTANTS.STATUS_MSG.SUCCESS.DEFAULT,
+        data
       );
     } catch (e) {
       console.log("ERROR", e);

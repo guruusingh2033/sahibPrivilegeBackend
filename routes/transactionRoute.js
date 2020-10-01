@@ -111,11 +111,39 @@ const deleteTransaction = {
   },
 };
 
+const getAllTransactions = {
+  method: "GET",
+  path: "/transaction/list",
+  options: {
+    handler: async (request, h) => {
+      const result = await transactionController.getAllTransactions(
+        request.headers.authorization,
+        request.query
+      );
+      return h.response(result).code(result.statusCode);
+    },
+    description: "Get list of all transactions",
+    notes: "Returns transaction information",
+    tags: ["api"], // ADD THIS TAG
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string().required(),
+      }).options({ allowUnknown: true }),
+      query: Joi.object({
+        memberId: Joi.string().optional(),
+        startDate: Joi.date().optional(),
+        endDate: Joi.date().optional(),
+      }),
+    },
+  },
+};
+
 let member = [
   addTransaction,
   editTransaction,
   getTransactionList,
   deleteTransaction,
+  getAllTransactions,
 ];
 
 module.exports = member;
