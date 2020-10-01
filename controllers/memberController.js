@@ -84,9 +84,16 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
-      const sql = `SELECT * FROM members WHERE isActive = ?`;
+      const sql = `SELECT mem.id,mem.firstName,mem.lastName,mem.emailId,mem.dateOfBirth,
+      mem.referralCode,mem.createdAt,SUM(rew.rewardPoints) AS rewards FROM members mem
+      LEFT JOIN rewardsEarning rew ON
+      mem.id = rew.memberId
+      WHERE mem.isActive = ?`;
       const params = [1];
       const data = await dbHandle.preparedQuery(sql, params);
+
+      const sqlToGetReward = `SELECT *`;
+
       return Utilities.sendSuccess(
         APP_CONSTANTS.STATUS_MSG.SUCCESS.DEFAULT,
         data

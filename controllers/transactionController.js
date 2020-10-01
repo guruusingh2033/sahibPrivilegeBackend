@@ -16,6 +16,23 @@ module.exports = {
       const params = [req.memberId, req.billNumber, req.quantity];
       await dbHandle.preparedQuery(sql, params);
 
+      const sqlGetTransaction =
+        "SELECT id FROM `transactions` WHERE `billNumber` = ?";
+      const paramsGetTransaction = [req.billNumber];
+      const transaction = await dbHandle.preparedQuery(
+        sqlGetTransaction,
+        paramsGetTransaction
+      );
+
+      if (transaction && transaction.length) {
+        const transactionId = transaction[0].id;
+        const rewardPoints = await calculateRewardPoints(req.quantity);
+        const sqlRewardsEarned =
+          "INSERT INTO `rewardsEarning` (`memberId`,`rewardPoints`,`transactionId`) values(?,?,?)";
+        const paramsRewardsEarned = [req.memberId, rewardPoints, transactionId];
+        await dbHandle.preparedQuery(sqlRewardsEarned, paramsRewardsEarned);
+      }
+
       return Utilities.sendSuccess(
         APP_CONSTANTS.STATUS_MSG.SUCCESS.TRANSACTION_ADDED,
         {}
@@ -92,4 +109,13 @@ module.exports = {
       return errorObject.output.payload;
     }
   },
+};
+
+const calculateRewardPoints = async (quantity) => {
+  const sql = `SELECT * FROM settings WHERE id = ?`;
+  const params = ["1"];
+  const data = await dbHandle.preparedQuery(sql, params);
+  if (data && data.length) {
+    return (data[0].rewardPoints * quantity) / data[0].quantityPerLitre;
+  }
 };
