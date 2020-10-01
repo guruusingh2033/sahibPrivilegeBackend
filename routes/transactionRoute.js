@@ -26,8 +26,8 @@ const addTransaction = {
       }).options({ allowUnknown: true }),
       payload: Joi.object({
         memberId: Joi.string().required(),
-          billNumber: Joi.string().required(),
-          quantity: Joi.string().required(),
+        billNumber: Joi.string().required(),
+        quantity: Joi.string().required(),
       }),
     },
   },
@@ -53,14 +53,13 @@ const editTransaction = {
       }).options({ allowUnknown: true }),
       payload: Joi.object({
         memberId: Joi.string().required(),
-          transactionId: Joi.string().required(),
-          billNumber: Joi.string().optional().allow(""),
-          quantity: Joi.string().optional().allow(""),
+        transactionId: Joi.string().required(),
+        billNumber: Joi.string().optional().allow(""),
+        quantity: Joi.string().optional().allow(""),
       }),
     },
   },
 };
-
 
 const getTransactionList = {
   method: "GET",
@@ -81,12 +80,42 @@ const getTransactionList = {
         authorization: Joi.string().required(),
       }).options({ allowUnknown: true }),
       params: Joi.object({
-        memberId: Joi.string().required()
+        memberId: Joi.string().required(),
       }),
     },
   },
 };
 
-let member = [addTransaction, editTransaction, getTransactionList];
+const deleteTransaction = {
+  method: "PUT",
+  path: "/transaction/delete",
+  options: {
+    handler: async (request, h) => {
+      const result = await transactionController.deleteTransaction(
+        request.headers.authorization,
+        request.payload
+      );
+      return h.response(result).code(result.statusCode);
+    },
+    description: "Delete Transaction",
+    notes: "Returns transaction information",
+    tags: ["api"], // ADD THIS TAG
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string().required(),
+      }).options({ allowUnknown: true }),
+      payload: Joi.object({
+        transactionIds: Joi.array().items(),
+      }),
+    },
+  },
+};
+
+let member = [
+  addTransaction,
+  editTransaction,
+  getTransactionList,
+  deleteTransaction,
+];
 
 module.exports = member;

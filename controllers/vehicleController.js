@@ -9,16 +9,12 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
-        console.log("vehicle");
-        
-        const sql =
-          "INSERT INTO `vehicles` (`memberId`,`vehicleNumber`,`vehicleType`) values(?,?,?)";
-        const params = [
-          req.memberId,
-          req.vehicleNumber,
-          req.vehicleType,
-        ];
-        await dbHandle.preparedQuery(sql, params);        
+      console.log("vehicle");
+
+      const sql =
+        "INSERT INTO `vehicles` (`memberId`,`vehicleNumber`,`vehicleType`) values(?,?,?)";
+      const params = [req.memberId, req.vehicleNumber, req.vehicleType];
+      await dbHandle.preparedQuery(sql, params);
 
       return Utilities.sendSuccess(
         APP_CONSTANTS.STATUS_MSG.SUCCESS.VEHICLE_ADDED,
@@ -28,7 +24,7 @@ module.exports = {
       console.log("error ****", e);
       const errorObject = JSON.parse(Utilities.sendError(e));
       console.log("error object:", errorObject);
-      
+
       return errorObject.output.payload;
     }
   },
@@ -40,8 +36,8 @@ module.exports = {
         return authenticatedUser;
       }
 
-        let sql = `UPDATE vehicles SET vehicleNumber = '${req.vehicleNumber}', vehicleType = '${req.vehicleType}' WHERE id = ${req.vehicleId} AND memberId = ${req.memberId}`;
-        await dbHandle.preparedQuery(sql);
+      let sql = `UPDATE vehicles SET vehicleNumber = '${req.vehicleNumber}', vehicleType = '${req.vehicleType}' WHERE id = ${req.vehicleId} AND memberId = ${req.memberId}`;
+      await dbHandle.preparedQuery(sql);
       return Utilities.sendSuccess(
         APP_CONSTANTS.STATUS_MSG.SUCCESS.VEHICLE_UPDATED,
         {}
@@ -65,6 +61,30 @@ module.exports = {
       return Utilities.sendSuccess(
         APP_CONSTANTS.STATUS_MSG.SUCCESS.DEFAULT,
         data
+      );
+    } catch (e) {
+      console.log("ERROR", e);
+      const errorObject = JSON.parse(Utilities.sendError(e));
+      return errorObject.output.payload;
+    }
+  },
+
+  deleteVehicle: async (auth, req) => {
+    try {
+      const authenticatedUser = await Utilities.authenticateUser(auth);
+      if (authenticatedUser.hasOwnProperty("statusCode")) {
+        return authenticatedUser;
+      }
+      req.vehicleIds.join(",");
+      let sql = `
+      DELETE FROM vehicles WHERE id IN (${req.vehicleIds});
+      `;
+      console.log(sql);
+      await dbHandle.preparedQuery(sql);
+
+      return Utilities.sendSuccess(
+        APP_CONSTANTS.STATUS_MSG.SUCCESS.RECORDS_DELETED,
+        {}
       );
     } catch (e) {
       console.log("ERROR", e);

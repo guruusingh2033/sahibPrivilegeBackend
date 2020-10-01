@@ -146,6 +146,30 @@ module.exports = {
       return Utilities.sendError(e);
     }
   },
+
+  deleteMember: async (auth, req) => {
+    try {
+      const authenticatedUser = await Utilities.authenticateUser(auth);
+      if (authenticatedUser.hasOwnProperty("statusCode")) {
+        return authenticatedUser;
+      }
+      req.memberIds.join(",");
+      let sql = `
+      DELETE FROM members WHERE id IN (${req.memberIds});
+      `;
+      console.log(sql);
+      await dbHandle.preparedQuery(sql);
+
+      return Utilities.sendSuccess(
+        APP_CONSTANTS.STATUS_MSG.SUCCESS.RECORDS_DELETED,
+        {}
+      );
+    } catch (e) {
+      console.log("ERROR", e);
+      const errorObject = JSON.parse(Utilities.sendError(e));
+      return errorObject.output.payload;
+    }
+  },
 };
 
 const ifMemberExists = async (mobile) => {

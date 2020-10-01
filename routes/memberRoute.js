@@ -87,6 +87,31 @@ const getMemberList = {
   },
 };
 
-let member = [register, editMember, getMemberList];
+const deleteMember = {
+  method: "PUT",
+  path: "/member/delete",
+  options: {
+    handler: async (request, h) => {
+      const result = await memberController.deleteMember(
+        request.headers.authorization,
+        request.payload
+      );
+      return h.response(result).code(result.statusCode);
+    },
+    description: "Delete Member",
+    notes: "Returns member information",
+    tags: ["api"], // ADD THIS TAG
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string().required(),
+      }).options({ allowUnknown: true }),
+      payload: Joi.object({
+        memberIds: Joi.array().items(),
+      }),
+    },
+  },
+};
+
+let member = [register, editMember, getMemberList, deleteMember];
 
 module.exports = member;

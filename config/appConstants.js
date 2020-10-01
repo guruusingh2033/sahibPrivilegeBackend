@@ -48,6 +48,11 @@ let STATUS_MSG = {
       customMessage: "Transaction updated successfully!",
       type: "TRANSACTION_UPDATED",
     },
+    RECORDS_DELETED: {
+      statusCode: 200,
+      customMessage: "Record(s) deleted successfully!",
+      type: "RECORDS_DELETED",
+    },
   },
   ERROR: {
     UNAUTHORIZED: {
