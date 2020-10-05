@@ -9,8 +9,6 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
-      console.log("vehicle");
-
       const sql =
         "INSERT INTO `vehicles` (`memberId`,`vehicleNumber`,`vehicleType`) values(?,?,?)";
       const params = [req.memberId, req.vehicleNumber, req.vehicleType];
@@ -21,10 +19,8 @@ module.exports = {
         {}
       );
     } catch (e) {
-      console.log("error ****", e);
+      console.log("ERROR:", e);
       const errorObject = JSON.parse(Utilities.sendError(e));
-      console.log("error object:", errorObject);
-
       return errorObject.output.payload;
     }
   },
@@ -79,7 +75,6 @@ module.exports = {
       let sql = `
       DELETE FROM vehicles WHERE id IN (${req.vehicleIds});
       `;
-      console.log(sql);
       await dbHandle.preparedQuery(sql);
 
       return Utilities.sendSuccess(

@@ -53,6 +53,16 @@ let STATUS_MSG = {
       customMessage: "Record(s) deleted successfully!",
       type: "RECORDS_DELETED",
     },
+    OTP_SENT: {
+      statusCode: 200,
+      customMessage: "OTP sent successfully!",
+      type: "OTP_SENT",
+    },
+    REWARDS_REDEEMED: {
+      statusCode: 200,
+      customMessage: "Rewards redeemed successfully!",
+      type: "REWARDS_REDEEMED",
+    },
   },
   ERROR: {
     UNAUTHORIZED: {
@@ -79,6 +89,31 @@ let STATUS_MSG = {
       statusCode: 400,
       customMessage: "Duplicate",
       type: "DUPLICATE",
+    },
+    RECORD_NOT_FOUND: {
+      statusCode: 400,
+      customMessage: "Could not find member",
+      type: "RECORD_NOT_FOUND",
+    },
+    OTP_MISMATCH: {
+      statusCode: 400,
+      customMessage: "OTP doesn't match",
+      type: "OTP_MISMATCH",
+    },
+    NO_REWARD: {
+      statusCode: 400,
+      customMessage: "No reward point available",
+      type: "NO_REWARD",
+    },
+    NOT_ENOUGH_REWARD: {
+      statusCode: 400,
+      customMessage: "Not enough reward points available",
+      type: "NOT_ENOUGH_REWARD",
+    },
+    OTP_EXPIRED: {
+      statusCode: 400,
+      customMessage: "OTP is valid for 10 minutes, please try again",
+      type: "OTP_EXPIRED",
     },
   },
 };

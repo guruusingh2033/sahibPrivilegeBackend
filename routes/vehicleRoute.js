@@ -7,14 +7,10 @@ const addVehicles = {
   path: "/vehicle/add",
   options: {
     handler: async (request, h) => {
-      console.log("***");
-
       const result = await vehicleController.add(
         request.headers.authorization,
         request.payload
       );
-      console.log("result:::", result);
-
       return h.response(result).code(result.statusCode);
     },
     description: "Add vehicles",

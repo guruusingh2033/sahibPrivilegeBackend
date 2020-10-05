@@ -10,11 +10,6 @@ module.exports = {
         return authenticatedUser;
       }
       const checkIfMemberExists = await ifMemberExists(req.mobile);
-      console.log(
-        "!ifMemberExists(req.mobile):",
-        req.mobile,
-        checkIfMemberExists
-      );
 
       if (!checkIfMemberExists) {
         const sql =
@@ -57,8 +52,6 @@ module.exports = {
         );
         if (!checkIfMobileNumberExists) {
           let sql = `UPDATE members SET firstName='${req.firstName}',lastName='${req.lastName}',mobile='${req.mobile}',emailId='${req.emailId}',dateOfBirth='${req.dateOfBirth}' WHERE id=${req.memberId}`;
-          console.log("sql:", sql);
-
           await dbHandle.preparedQuery(sql);
           return Utilities.sendSuccess(
             APP_CONSTANTS.STATUS_MSG.SUCCESS.PROFILE_UPDATED,
@@ -84,15 +77,17 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
+      // const sql = `SELECT mem.id,mem.firstName,mem.lastName,mem.emailId,mem.dateOfBirth,
+      // mem.referralCode,mem.createdAt,SUM(rew.rewardPoints) AS rewards FROM members mem
+      // LEFT JOIN rewardsEarning rew ON
+      // mem.id = rew.memberId
+      // WHERE mem.isActive = ?`;
+
       const sql = `SELECT mem.id,mem.firstName,mem.lastName,mem.emailId,mem.dateOfBirth,
-      mem.referralCode,mem.createdAt,SUM(rew.rewardPoints) AS rewards FROM members mem
-      LEFT JOIN rewardsEarning rew ON
-      mem.id = rew.memberId
+      mem.referralCode,mem.createdAt,mem.rewards FROM members mem
       WHERE mem.isActive = ?`;
       const params = [1];
       const data = await dbHandle.preparedQuery(sql, params);
-
-      const sqlToGetReward = `SELECT *`;
 
       return Utilities.sendSuccess(
         APP_CONSTANTS.STATUS_MSG.SUCCESS.DEFAULT,
@@ -148,8 +143,6 @@ module.exports = {
       }
     } catch (e) {
       console.log("ERROR", e);
-      console.log("returning from catch");
-
       return Utilities.sendError(e);
     }
   },
@@ -164,7 +157,6 @@ module.exports = {
       let sql = `
       DELETE FROM members WHERE id IN (${req.memberIds});
       `;
-      console.log(sql);
       await dbHandle.preparedQuery(sql);
 
       return Utilities.sendSuccess(

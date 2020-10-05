@@ -7,14 +7,10 @@ const addTransaction = {
   path: "/transaction/add",
   options: {
     handler: async (request, h) => {
-      console.log("***");
-
       const result = await transactionController.add(
         request.headers.authorization,
         request.payload
       );
-      console.log("result:::", result);
-
       return h.response(result).code(result.statusCode);
     },
     description: "Add transaction",

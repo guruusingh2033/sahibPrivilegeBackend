@@ -10,16 +10,19 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
-      console.log("vehicle");
 
       const sql =
         "INSERT INTO `transactions` (`memberId`,`billNumber`,`quantity`) values(?,?,?)";
       const params = [req.memberId, req.billNumber, req.quantity];
       await dbHandle.preparedQuery(sql, params);
 
-      const sqlGetTransaction =
-        "SELECT id FROM `transactions` WHERE `billNumber` = ?";
-      const paramsGetTransaction = [req.billNumber];
+      const sqlGetTransaction = `SELECT mem.rewards, trs.id FROM members mem 
+        LEFT JOIN transactions trs 
+        ON
+        mem.id = trs.memberId
+        WHERE 
+        trs.billNumber = ? AND mem.id = ?`;
+      const paramsGetTransaction = [req.billNumber, req.memberId];
       const transaction = await dbHandle.preparedQuery(
         sqlGetTransaction,
         paramsGetTransaction
@@ -32,6 +35,14 @@ module.exports = {
           "INSERT INTO `rewardsEarning` (`memberId`,`rewardPoints`,`transactionId`) values(?,?,?)";
         const paramsRewardsEarned = [req.memberId, rewardPoints, transactionId];
         await dbHandle.preparedQuery(sqlRewardsEarned, paramsRewardsEarned);
+
+        let updatedRewards = transaction[0].rewards + rewardPoints;
+        const sqlRewardsUpdate = `UPDATE members SET rewards = ? WHERE id = ${req.memberId}`;
+        await dbHandle.preparedQuery(sqlRewardsUpdate, [updatedRewards]);
+        return Utilities.sendSuccess(
+          APP_CONSTANTS.STATUS_MSG.SUCCESS.TRANSACTION_UPDATED,
+          {}
+        );
       }
 
       return Utilities.sendSuccess(
@@ -39,10 +50,8 @@ module.exports = {
         {}
       );
     } catch (e) {
-      console.log("error ****", e);
+      console.log("ERROR: ", e);
       const errorObject = JSON.parse(Utilities.sendError(e));
-      console.log("error object:", errorObject);
-
       return errorObject.output.payload;
     }
   },
@@ -97,7 +106,6 @@ module.exports = {
       let sql = `
       DELETE FROM transactions WHERE id IN (${req.transactionIds});
       `;
-      console.log(sql);
       await dbHandle.preparedQuery(sql);
 
       return Utilities.sendSuccess(
@@ -135,7 +143,6 @@ module.exports = {
       }
 
       sql += ` ORDER BY createdAt DESC LIMIT 50`;
-      console.log(sql, params);
 
       const data = await dbHandle.preparedQuery(sql, params);
       return Utilities.sendSuccess(
