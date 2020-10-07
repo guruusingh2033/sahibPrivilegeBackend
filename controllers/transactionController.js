@@ -125,10 +125,11 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
-      let sql = `SELECT * FROM transactions`;
+      let sql = `SELECT trs.id, trs.memberId, trs.billNumber, trs.quantity, trs.createdAt, mem.firstName, mem.lastName FROM transactions trs
+      JOIN members mem ON mem.id = trs.memberId`;
       let params;
       if (req.memberId) {
-        sql += ` WHERE memberId = ?`;
+        sql += ` WHERE trs.memberId = ?`;
         params = [req.memberId];
       }
       if (req.startDate && req.endDate) {
@@ -139,10 +140,10 @@ module.exports = {
         } else {
           sql += ` WHERE`;
         }
-        sql += ` cast(createdAt as date) BETWEEN '${startDate}' AND '${endDate}'`;
+        sql += ` cast(trs.createdAt as date) BETWEEN '${startDate}' AND '${endDate}'`;
       }
 
-      sql += ` ORDER BY createdAt DESC LIMIT 50`;
+      sql += ` ORDER BY trs.createdAt DESC LIMIT 50`;
 
       const data = await dbHandle.preparedQuery(sql, params);
       return Utilities.sendSuccess(
