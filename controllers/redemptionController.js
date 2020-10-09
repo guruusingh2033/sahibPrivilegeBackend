@@ -2,6 +2,7 @@ const Utilities = require("../utils/utilities");
 const APP_CONSTANTS = require("../config/appConstants");
 const dbHandle = require("../utils/mySqlConnect").mysql;
 const moment = require("moment");
+const smsTemplate = require("../config/smsConfig").twoFactor;
 
 module.exports = {
   init: async (auth, req) => {
@@ -10,7 +11,7 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
-      const sqlRewards = "SELECT rewards FROM `members` WHERE id = ?";
+      const sqlRewards = "SELECT rewards, mobile FROM `members` WHERE id = ?";
       const params = [req.memberId];
       const data = await dbHandle.preparedQuery(sqlRewards, params);
 
@@ -21,11 +22,23 @@ module.exports = {
             const otpSentAt = moment.utc().format("YYYY-MM-DD HH:mm");
             let sql = `UPDATE members SET redemptionOTP = ?, redemptionOTPSentAt = ? WHERE id = ${req.memberId}`;
             await dbHandle.preparedQuery(sql, [otp, otpSentAt]);
-            //code to send OTP
-            return Utilities.sendSuccess(
-              APP_CONSTANTS.STATUS_MSG.SUCCESS.OTP_SENT,
-              { OTP: otp }
+            const isSMSSent = await Utilities.send2FactorSMS(
+              data[0].mobile,
+              smsTemplate.templates.rewards_otp,
+              otp,
+              req.rewards
             );
+            if (isSMSSent) {
+              return Utilities.sendSuccess(
+                APP_CONSTANTS.STATUS_MSG.SUCCESS.OTP_SENT,
+                { OTP: otp }
+              );
+            } else {
+              return Utilities.sendSuccess(
+                APP_CONSTANTS.STATUS_MSG.ERROR.OTP_NOT_SENT,
+                { OTP: otp }
+              );
+            }
           } else {
             return Utilities.sendSuccess(
               APP_CONSTANTS.STATUS_MSG.ERROR.NOT_ENOUGH_REWARD,
@@ -57,7 +70,7 @@ module.exports = {
         return authenticatedUser;
       }
       const sql =
-        "SELECT rewards, redemptionOTP, redemptionOTPSentAt FROM `members` WHERE id = ?";
+        "SELECT rewards, redemptionOTP, redemptionOTPSentAt, mobile FROM `members` WHERE id = ?";
       const params = [req.memberId, req.OTP];
       const data = await dbHandle.preparedQuery(sql, params);
 
@@ -83,14 +96,20 @@ module.exports = {
             );
           } else {
             let updatedRewards = data[0].rewards - req.rewards;
-            const sqlUpdateRewards = `UPDATE members SET rewards = ? WHERE id = ${req.memberId}`;
+            const sqlUpdateRewards = `UPDATE members SET rewards = ?, redemptionOTP = ? WHERE id = ${req.memberId}`;
 
-            await dbHandle.preparedQuery(sqlUpdateRewards, [updatedRewards]);
+            await dbHandle.preparedQuery(sqlUpdateRewards, [updatedRewards, 0]);
 
             const sqlRewardsRedeem =
               "INSERT INTO `rewardsRedeem` (`memberId`,`rewards`) values(?,?)";
             const paramsRewardsRedeem = [req.memberId, req.rewards];
             await dbHandle.preparedQuery(sqlRewardsRedeem, paramsRewardsRedeem);
+            Utilities.send2FactorSMS(
+              data[0].mobile,
+              smsTemplate.templates.rewards_deducted,
+              req.rewards,
+              parseFloat(updatedRewards).toFixed(2)
+            );
             return Utilities.sendSuccess(
               APP_CONSTANTS.STATUS_MSG.SUCCESS.REWARDS_REDEEMED,
               {}

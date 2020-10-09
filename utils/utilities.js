@@ -19,7 +19,8 @@ const s3 = new AWS.S3({
   region: s3Config.region,
 });
 const cryptoRandomString = require("crypto-random-string");
-
+const axios = require("axios");
+const smsConfig = require("../config/smsConfig");
 /**
  *
  * @param {Object} successMsg success message with status code
@@ -59,71 +60,74 @@ let sendError = (data) => {
   ) {
     return Boom.create(data.statusCode, data.customMessage);
   } else {
-    
     let message = "Record already exists";
     let errorToSend = "";
     if (typeof data == "object") {
       if (data.sqlState == "23000") {
-          if(data.sqlMessage.includes("vehicleNumber")) {
-              errorToSend = APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + " vehicle number"
-          }
-          if(data.sqlMessage.includes("billNumber")) {
-            errorToSend = APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + " bill number"
+        if (data.sqlMessage.includes("vehicleNumber")) {
+          errorToSend =
+            APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+            " vehicle number";
+        }
+        if (data.sqlMessage.includes("billNumber")) {
+          errorToSend =
+            APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+            " bill number";
         }
         // if ((data.code = 11000)) {
-          // if (data.message.includes("emailId")) {
-          //   errorToSend =
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "emailId";
-          // } else if (data.message.includes("name")) {
-          //   errorToSend =
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "name";
-          // } else if (data.message.includes("abr")) {
-          //   errorToSend =
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "abr";
-          // } else if (data.message.includes("code")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "code";
-          // } else if (data.message.includes("location")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "location";
-          // } else if (data.message.includes("title")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "title";
-          // } else if (data.message.includes("scheduleName")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "scheduleName";
-          // } else if (data.message.includes("templateName")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "templateName";
-          // } else if (data.message.includes("roomName")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "roomName";
-          // } else if (data.message.includes("taskName")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "taskName";
-          // } else if (data.message.includes("role")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "role";
-          // } else if (data.errmsg.includes("holidayLocationIndex")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "name,locationId";
-          // } else if (data.errmsg.includes("participantSurveyIndex")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "participantId,surveyId,cohortId";
-          // } else if (data.errmsg.includes("participantFeedbackIndex")) {
-          //   errorToSend +=
-          //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
-          //     "participantId,feedbackId,cohortId";
-          // }
-          return JSON.stringify(Boom.conflict(errorToSend));
+        // if (data.message.includes("emailId")) {
+        //   errorToSend =
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "emailId";
+        // } else if (data.message.includes("name")) {
+        //   errorToSend =
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "name";
+        // } else if (data.message.includes("abr")) {
+        //   errorToSend =
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "abr";
+        // } else if (data.message.includes("code")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "code";
+        // } else if (data.message.includes("location")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "location";
+        // } else if (data.message.includes("title")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "title";
+        // } else if (data.message.includes("scheduleName")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "scheduleName";
+        // } else if (data.message.includes("templateName")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "templateName";
+        // } else if (data.message.includes("roomName")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "roomName";
+        // } else if (data.message.includes("taskName")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "taskName";
+        // } else if (data.message.includes("role")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage + "role";
+        // } else if (data.errmsg.includes("holidayLocationIndex")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "name,locationId";
+        // } else if (data.errmsg.includes("participantSurveyIndex")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "participantId,surveyId,cohortId";
+        // } else if (data.errmsg.includes("participantFeedbackIndex")) {
+        //   errorToSend +=
+        //     APP_CONSTANTS.STATUS_MSG.ERROR.DUPLICATE.customMessage +
+        //     "participantId,feedbackId,cohortId";
+        // }
+        return JSON.stringify(Boom.conflict(errorToSend));
         // }
       } else {
         if (data.name == "ApplicationError") {
@@ -534,6 +538,29 @@ let generatePassword = () => {
 let nominationLink =
   "http://sapreact-lb-1249997658.us-east-2.elb.amazonaws.com/#/";
 
+let send2FactorSMS = async (to, templateName, value1, value2) => {
+  console.log(to, templateName, value1, value2);
+
+  const apiKey = smsConfig.twoFactor.apiKey;
+  const senderId = smsConfig.twoFactor.senderId;
+  axios
+    .post(`https://2factor.in/API/V1/${apiKey}/ADDON_SERVICES/SEND/TSMS`, {
+      From: senderId,
+      To: to,
+      TemplateName: templateName,
+      VAR1: value1,
+      VAR2: value2,
+    })
+    .then((response) => {
+      console.log("response:", response);
+      return true;
+    })
+    .catch((error) => {
+      console.log("error:", error);
+      return false;
+    });
+};
+
 module.exports = {
   sendSuccess: sendSuccess,
   sendError: sendError,
@@ -555,4 +582,5 @@ module.exports = {
   nominationLink: nominationLink,
   generatePassword: generatePassword,
   mapHoursToMinutes: mapHoursToMinutes,
+  send2FactorSMS: send2FactorSMS,
 };

@@ -115,6 +115,11 @@ let STATUS_MSG = {
       customMessage: "OTP is valid for 10 minutes, please try again",
       type: "OTP_EXPIRED",
     },
+    OTP_NOT_SENT: {
+      statusCode: 400,
+      customMessage: "OTP could not be sent, please try again",
+      type: "OTP_NOT_SENT",
+    },
   },
 };
 

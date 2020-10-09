@@ -2,7 +2,7 @@ const Utilities = require("../utils/utilities");
 const APP_CONSTANTS = require("../config/appConstants");
 const dbHandle = require("../utils/mySqlConnect").mysql;
 const moment = require("moment");
-
+const smsTemplate = require("../config/smsConfig").twoFactor;
 module.exports = {
   add: async (auth, req) => {
     try {
@@ -16,7 +16,7 @@ module.exports = {
       const params = [req.memberId, req.billNumber, req.quantity];
       await dbHandle.preparedQuery(sql, params);
 
-      const sqlGetTransaction = `SELECT mem.rewards, trs.id FROM members mem 
+      const sqlGetTransaction = `SELECT mem.rewards, mem.mobile, mem.firstName, mem.lastName, trs.id FROM members mem 
         LEFT JOIN transactions trs 
         ON
         mem.id = trs.memberId
@@ -39,16 +39,16 @@ module.exports = {
         let updatedRewards = transaction[0].rewards + rewardPoints;
         const sqlRewardsUpdate = `UPDATE members SET rewards = ? WHERE id = ${req.memberId}`;
         await dbHandle.preparedQuery(sqlRewardsUpdate, [updatedRewards]);
+        // Utilities.send2FactorSMS(
+        //   transaction[0].mobile,
+        //   smsTemplate.templates.rewards_added,
+        //   rewardPoints
+        // );
         return Utilities.sendSuccess(
-          APP_CONSTANTS.STATUS_MSG.SUCCESS.TRANSACTION_UPDATED,
+          APP_CONSTANTS.STATUS_MSG.SUCCESS.TRANSACTION_ADDED,
           {}
         );
       }
-
-      return Utilities.sendSuccess(
-        APP_CONSTANTS.STATUS_MSG.SUCCESS.TRANSACTION_ADDED,
-        {}
-      );
     } catch (e) {
       console.log("ERROR: ", e);
       const errorObject = JSON.parse(Utilities.sendError(e));
