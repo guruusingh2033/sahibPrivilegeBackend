@@ -10,10 +10,13 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
+      let currentTime = moment(new Date())
+        .utcOffset(330)
+        .format("YYYY-MM-DD/HH:mm A");
 
       const sql =
-        "INSERT INTO `transactions` (`memberId`,`billNumber`,`quantity`) values(?,?,?)";
-      const params = [req.memberId, req.billNumber, req.quantity];
+        "INSERT INTO `transactions` (`memberId`,`billNumber`,`quantity`,`createdAt`) values(?,?,?,?)";
+      const params = [req.memberId, req.billNumber, req.quantity, currentTime];
       await dbHandle.preparedQuery(sql, params);
 
       const sqlGetTransaction = `SELECT mem.rewards, mem.mobile, mem.firstName, mem.lastName, trs.id FROM members mem 

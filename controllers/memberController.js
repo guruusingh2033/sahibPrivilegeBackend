@@ -84,7 +84,7 @@ module.exports = {
       // WHERE mem.isActive = ?`;
 
       const sql = `SELECT mem.id,mem.firstName,mem.lastName,mem.emailId,mem.dateOfBirth,
-      mem.referralCode,mem.createdAt,mem.rewards FROM members mem
+      mem.referralCode,mem.createdAt,mem.rewards,mem.mobile FROM members mem
       WHERE mem.isActive = ?`;
       const params = [1];
       const data = await dbHandle.preparedQuery(sql, params);
