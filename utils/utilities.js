@@ -539,26 +539,23 @@ let nominationLink =
   "http://sapreact-lb-1249997658.us-east-2.elb.amazonaws.com/#/";
 
 let send2FactorSMS = async (to, templateName, value1, value2) => {
-  console.log(to, templateName, value1, value2);
-
   const apiKey = smsConfig.twoFactor.apiKey;
   const senderId = smsConfig.twoFactor.senderId;
-  axios
-    .post(`https://2factor.in/API/V1/${apiKey}/ADDON_SERVICES/SEND/TSMS`, {
+  const response = await axios.post(
+    `https://2factor.in/API/V1/${apiKey}/ADDON_SERVICES/SEND/TSMS`,
+    {
       From: senderId,
       To: to,
       TemplateName: templateName,
       VAR1: value1,
       VAR2: value2,
-    })
-    .then((response) => {
-      console.log("response:", response);
-      return true;
-    })
-    .catch((error) => {
-      console.log("error:", error);
-      return false;
-    });
+    }
+  );
+  if (response.data.Status === "Success") {
+    return true;
+  } else {
+    return false;
+  }
 };
 
 module.exports = {

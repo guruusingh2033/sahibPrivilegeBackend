@@ -28,6 +28,7 @@ module.exports = {
               otp,
               req.rewards
             );
+
             if (isSMSSent) {
               return Utilities.sendSuccess(
                 APP_CONSTANTS.STATUS_MSG.SUCCESS.OTP_SENT,
