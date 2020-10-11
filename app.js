@@ -6,12 +6,13 @@ const Vision = require("@hapi/vision");
 const HapiSwagger = require("hapi-swagger");
 const Routes = require("./routes");
 // global.db = require("./config/dbConfig").connection;
+const PORT = process.env.PORT || 4000;
 
 (async () => {
   try {
     const server = await new Hapi.Server({
-      host: "localhost",
-      port: 4000,
+      host: "0.0.0.0",
+      port: PORT,
       routes: { cors: true },
     });
 
