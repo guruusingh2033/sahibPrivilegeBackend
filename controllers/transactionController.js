@@ -12,7 +12,7 @@ module.exports = {
       }
       let currentTime = moment(new Date())
         .utcOffset(330)
-        .format("YYYY-MM-DD/HH:mm A");
+        .format("YYYY-MM-DD HH:mm:ss");
 
       const sql =
         "INSERT INTO `transactions` (`memberId`,`billNumber`,`quantity`,`createdAt`) values(?,?,?,?)";
@@ -152,8 +152,8 @@ module.exports = {
         params = [req.memberId];
       }
       if (req.startDate && req.endDate) {
-        const startDate = moment(req.startDate).format("YYYY-MM-DD");
-        const endDate = moment(req.endDate).format("YYYY-MM-DD");
+        const startDate = moment(req.startDate).format("YYYY-MM-DD HH:mm:ss");
+        const endDate = moment(req.endDate).format("YYYY-MM-DD HH:mm:ss");
         if (req.memberId) {
           sql += ` AND`;
         } else {
