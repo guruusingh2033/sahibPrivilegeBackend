@@ -19,16 +19,9 @@ module.exports = {
       const params = [req.memberId, req.billNumber, req.quantity, currentTime];
       await dbHandle.preparedQuery(sql, params);
 
-      const sqlGetTransaction = `SELECT mem.rewards, mem.mobile, mem.firstName, mem.lastName, trs.id FROM members mem 
-        LEFT JOIN transactions trs 
-        ON
-        mem.id = trs.memberId
-        WHERE 
-        trs.billNumber = ? AND mem.id = ?`;
-      const paramsGetTransaction = [req.billNumber, req.memberId];
-      const transaction = await dbHandle.preparedQuery(
-        sqlGetTransaction,
-        paramsGetTransaction
+      const transaction = await getMemberTransactionByBillNumber(
+        req.billNumber,
+        req.memberId
       );
 
       if (transaction && transaction.length) {
@@ -39,14 +32,13 @@ module.exports = {
         const paramsRewardsEarned = [req.memberId, rewardPoints, transactionId];
         await dbHandle.preparedQuery(sqlRewardsEarned, paramsRewardsEarned);
 
-        let updatedRewards = transaction[0].rewards + rewardPoints;
-        const sqlRewardsUpdate = `UPDATE members SET rewards = ? WHERE id = ${req.memberId}`;
-        await dbHandle.preparedQuery(sqlRewardsUpdate, [updatedRewards]);
-        // Utilities.send2FactorSMS(
-        //   transaction[0].mobile,
-        //   smsTemplate.templates.rewards_added,
-        //   rewardPoints
-        // );
+        await updateMemberRewards(
+          transaction[0].rewards,
+          rewardPoints,
+          req.memberId,
+          false
+        );
+
         return Utilities.sendSuccess(
           APP_CONSTANTS.STATUS_MSG.SUCCESS.TRANSACTION_ADDED,
           {}
@@ -66,12 +58,36 @@ module.exports = {
         return authenticatedUser;
       }
 
-      let sql = `UPDATE transactions SET billNumber = '${req.billNumber}', quantity = '${req.quantity}' WHERE id = ${req.transactionId} AND memberId = ${req.memberId}`;
-      await dbHandle.preparedQuery(sql);
-      return Utilities.sendSuccess(
-        APP_CONSTANTS.STATUS_MSG.SUCCESS.TRANSACTION_UPDATED,
-        {}
+      const transaction = await getMemberTransactionByTransactionId(
+        req.transactionId,
+        req.memberId
       );
+      const currentRewards = transaction[0].rewards,
+        earlierQuantity = transaction[0].quantity;
+
+      if (transaction && transaction.length) {
+        let sql = `UPDATE transactions SET billNumber = '${req.billNumber}', quantity = '${req.quantity}' WHERE id = ${req.transactionId} AND memberId = ${req.memberId}`;
+        await dbHandle.preparedQuery(sql);
+
+        const transactionId = transaction[0].id;
+        const rewardPoints = await calculateRewardPoints(req.quantity);
+        const sqlRewardsEarned = `UPDATE rewardsEarning SET rewardPoints = ? WHERE transactionId = ? AND memberId = ?`;
+        const paramsRewardsEarned = [rewardPoints, transactionId, req.memberId];
+        await dbHandle.preparedQuery(sqlRewardsEarned, paramsRewardsEarned);
+
+        await updateMemberRewards(
+          currentRewards,
+          rewardPoints,
+          req.memberId,
+          true,
+          earlierQuantity
+        );
+
+        return Utilities.sendSuccess(
+          APP_CONSTANTS.STATUS_MSG.SUCCESS.TRANSACTION_UPDATED,
+          {}
+        );
+      }
     } catch (e) {
       console.log("ERROR", e);
       const errorObject = JSON.parse(Utilities.sendError(e));
@@ -168,4 +184,59 @@ const calculateRewardPoints = async (quantity) => {
   if (data && data.length) {
     return (data[0].rewardPoints * quantity) / data[0].quantityPerLitre;
   }
+};
+
+const getMemberTransactionByBillNumber = async (billNumber, memberId) => {
+  const sqlGetTransaction = `SELECT mem.rewards, mem.mobile, mem.firstName, mem.lastName, trs.id, trs.quantity FROM members mem 
+  LEFT JOIN transactions trs 
+  ON
+  mem.id = trs.memberId
+  WHERE 
+  trs.billNumber = ? AND mem.id = ?`;
+  const paramsGetTransaction = [billNumber, memberId];
+  const transaction = await dbHandle.preparedQuery(
+    sqlGetTransaction,
+    paramsGetTransaction
+  );
+  return transaction;
+};
+
+const getMemberTransactionByTransactionId = async (transactionId, memberId) => {
+  const sqlGetTransaction = `SELECT mem.rewards, mem.mobile, mem.firstName, mem.lastName, trs.id, trs.quantity FROM members mem 
+  LEFT JOIN transactions trs 
+  ON
+  mem.id = trs.memberId
+  WHERE 
+  trs.id = ? AND mem.id = ?`;
+  const paramsGetTransaction = [transactionId, memberId];
+  const transaction = await dbHandle.preparedQuery(
+    sqlGetTransaction,
+    paramsGetTransaction
+  );
+  return transaction;
+};
+
+const updateMemberRewards = async (
+  currentRewards,
+  newRewards,
+  memberId,
+  isUpdating,
+  earlierQuantity
+) => {
+  let updatedRewards;
+  if (isUpdating) {
+    const existingRewards = await calculateRewardPoints(earlierQuantity);
+    updatedRewards = currentRewards - existingRewards + newRewards;
+  } else {
+    updatedRewards = currentRewards + newRewards;
+  }
+
+  const sqlRewardsUpdate = `UPDATE members SET rewards = ? WHERE id = ${memberId}`;
+  await dbHandle.preparedQuery(sqlRewardsUpdate, [updatedRewards]);
+  // Utilities.send2FactorSMS(
+  //   transaction[0].mobile,
+  //   smsTemplate.templates.rewards_added,
+  //   rewardPoints
+  // );
+  return;
 };
