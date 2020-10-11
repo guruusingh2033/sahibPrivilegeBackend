@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 4000;
 (async () => {
   try {
     const server = await new Hapi.Server({
-      host: "localhost",
+      host: "0.0.0.0",
       port: PORT,
       routes: { cors: true },
     });
