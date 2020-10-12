@@ -87,4 +87,24 @@ module.exports = {
       return errorObject.output.payload;
     }
   },
+
+  getAllVehicles: async (auth, req) => {
+    try {
+      const authenticatedUser = await Utilities.authenticateUser(auth);
+      if (authenticatedUser.hasOwnProperty("statusCode")) {
+        return authenticatedUser;
+      }
+      const sql = `SELECT veh.id, veh.vehicleNumber, veh.vehicleType, mem.id AS memberId, mem.firstName, mem.mobile, mem.lastName FROM vehicles veh
+      JOIN members mem ON mem.id = veh.memberId`;
+      const data = await dbHandle.preparedQuery(sql, []);
+      return Utilities.sendSuccess(
+        APP_CONSTANTS.STATUS_MSG.SUCCESS.DEFAULT,
+        data
+      );
+    } catch (e) {
+      console.log("ERROR", e);
+      const errorObject = JSON.parse(Utilities.sendError(e));
+      return errorObject.output.payload;
+    }
+  },
 };

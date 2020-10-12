@@ -107,6 +107,33 @@ const deleteVehicle = {
   },
 };
 
-let member = [addVehicles, editVehicles, getVehicleList, deleteVehicle];
+const getAllVehicles = {
+  method: "GET",
+  path: "/vehicle/list",
+  options: {
+    handler: async (request, h) => {
+      const result = await vehicleController.getAllVehicles(
+        request.headers.authorization
+      );
+      return h.response(result).code(result.statusCode);
+    },
+    description: "Get all vehicles",
+    notes: "Returns vehicle information",
+    tags: ["api"], // ADD THIS TAG
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string().required(),
+      }).options({ allowUnknown: true }),
+    },
+  },
+};
+
+let member = [
+  addVehicles,
+  editVehicles,
+  getVehicleList,
+  deleteVehicle,
+  getAllVehicles,
+];
 
 module.exports = member;
