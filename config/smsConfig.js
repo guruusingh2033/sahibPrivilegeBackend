@@ -1,6 +1,6 @@
 "use strict";
 let twoFactor = {
-  apiKey: "a050d1aa-09d7-11eb-9fa5-0200cd936042",
+  apiKey: "c6260fef-2257-11eb-a709-0200cd936042",
   senderId: "SAHIBP", //"WELCOM",
   templates: {
     test: "Welcome",
