@@ -121,16 +121,25 @@ module.exports = {
       if (authenticatedUser.hasOwnProperty("statusCode")) {
         return authenticatedUser;
       }
+      let transactionId = req.transactionIds[0];
       req.transactionIds.join(",");
-      let sql = `
-      DELETE FROM transactions WHERE id IN (${req.transactionIds});
-      `;
-      await dbHandle.preparedQuery(sql);
+      const transaction = await getTransactionDetails(transactionId);
+      if (transaction && transaction.length) {
+        let updatedRewards =
+          transaction[0].rewards - transaction[0].rewardPoints;
+        const sqlRewardsUpdate = `UPDATE members SET rewards = ? WHERE id = ${transaction[0].memberId}`;
+        await dbHandle.preparedQuery(sqlRewardsUpdate, [updatedRewards]);
 
-      return Utilities.sendSuccess(
-        APP_CONSTANTS.STATUS_MSG.SUCCESS.RECORDS_DELETED,
-        {}
-      );
+        let sql = `
+        DELETE FROM transactions WHERE id IN (${req.transactionIds});
+        `;
+        await dbHandle.preparedQuery(sql);
+
+        return Utilities.sendSuccess(
+          APP_CONSTANTS.STATUS_MSG.SUCCESS.RECORDS_DELETED,
+          {}
+        );
+      }
     } catch (e) {
       console.log("ERROR", e);
       const errorObject = JSON.parse(Utilities.sendError(e));
@@ -239,4 +248,22 @@ const updateMemberRewards = async (
   //   rewardPoints
   // );
   return;
+};
+
+const getTransactionDetails = async (transactionId) => {
+  const sqlGetTransaction = `SELECT mem.rewards, mem.id AS memberId, trs.id AS transactionId, rse.rewardPoints, rse.id AS rewardsEarnedId FROM members mem 
+  LEFT JOIN transactions trs 
+  ON
+  mem.id = trs.memberId
+  LEFT JOIN rewardsEarning rse
+  ON
+  trs.id = rse.transactionId
+  WHERE 
+  trs.id = ?`;
+  const paramsGetTransaction = [transactionId];
+  const transaction = await dbHandle.preparedQuery(
+    sqlGetTransaction,
+    paramsGetTransaction
+  );
+  return transaction;
 };
