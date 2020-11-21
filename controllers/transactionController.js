@@ -242,11 +242,11 @@ const updateMemberRewards = async (
 
   const sqlRewardsUpdate = `UPDATE members SET rewards = ? WHERE id = ${memberId}`;
   await dbHandle.preparedQuery(sqlRewardsUpdate, [updatedRewards]);
-  // Utilities.send2FactorSMS(
-  //   transaction[0].mobile,
-  //   smsTemplate.templates.rewards_added,
-  //   rewardPoints
-  // );
+  Utilities.send2FactorSMS(
+    transaction[0].mobile,
+    smsTemplate.templates.rewards_added,
+    rewardPoints
+  );
   return;
 };
 
