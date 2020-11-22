@@ -33,6 +33,7 @@ module.exports = {
         await dbHandle.preparedQuery(sqlRewardsEarned, paramsRewardsEarned);
 
         await updateMemberRewards(
+          transaction[0].mobile,
           transaction[0].rewards,
           rewardPoints,
           req.memberId,
@@ -76,6 +77,7 @@ module.exports = {
         await dbHandle.preparedQuery(sqlRewardsEarned, paramsRewardsEarned);
 
         await updateMemberRewards(
+          transaction[0].mobile,
           currentRewards,
           rewardPoints,
           req.memberId,
@@ -226,6 +228,7 @@ const getMemberTransactionByTransactionId = async (transactionId, memberId) => {
 };
 
 const updateMemberRewards = async (
+  mobile,
   currentRewards,
   newRewards,
   memberId,
@@ -242,11 +245,12 @@ const updateMemberRewards = async (
 
   const sqlRewardsUpdate = `UPDATE members SET rewards = ? WHERE id = ${memberId}`;
   await dbHandle.preparedQuery(sqlRewardsUpdate, [updatedRewards]);
-  Utilities.send2FactorSMS(
-    transaction[0].mobile,
-    smsTemplate.templates.rewards_added,
-    rewardPoints
-  );
+  if (!isUpdating)
+    Utilities.send2FactorSMS(
+      mobile,
+      smsTemplate.templates.rewards_added,
+      newRewards
+    );
   return;
 };
 
