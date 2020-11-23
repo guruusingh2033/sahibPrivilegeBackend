@@ -1,6 +1,7 @@
 const Utilities = require("../utils/utilities");
 const APP_CONSTANTS = require("../config/appConstants");
 const dbHandle = require("../utils/mySqlConnect").mysql;
+const moment = require("moment");
 
 module.exports = {
   register: async (req) => {
@@ -536,57 +537,36 @@ module.exports = {
     try {
       const currentPassword = req.currentPassword;
       const newPassword = req.newPassword;
-      const confirmNewPassword = req.confirmNewPassword;
-
-      const getUserInformation = await userService.getData(
-        {
-          _id: authenticatedUser,
-        },
-        { __v: 0 },
-        { lean: true, limit: 1 }
-      );
-      if (!getUserInformation) {
-        return Utilities.sendSuccess(
-          APP_CONSTANTS.STATUS_MSG.ERROR.UNAUTHORIZED,
-          {}
-        );
-      } else if (
-        Utilities.compareHash(currentPassword, getUserInformation.password)
-      ) {
-        if (
-          newPassword &&
-          confirmNewPassword &&
-          newPassword !== confirmNewPassword
-        ) {
+      const sql = `SELECT password FROM admin WHERE id = ?`;
+      const params = [authenticatedUser];
+      const data = await dbHandle.preparedQuery(sql, params);
+      if (data && data.length) {
+        if (Utilities.compareHash(currentPassword, data[0].password)) {
+          if (Utilities.compareHash(newPassword, data[0].password)) {
+            return Utilities.sendSuccess(
+              APP_CONSTANTS.STATUS_MSG.ERROR.SAME_PASSWORDS,
+              {}
+            );
+          } else {
+            const setNewPassword = Utilities.cryptData(newPassword);
+            const accessToken = moment().unix();
+            await dbHandle.query(
+              `UPDATE admin SET accessToken = '${accessToken}', password = '${setNewPassword}' WHERE id = '${authenticatedUser}'`
+            );
+            return Utilities.sendSuccess(
+              APP_CONSTANTS.STATUS_MSG.SUCCESS.PASSWORD_UPDATED,
+              {}
+            );
+          }
+        } else {
           return Utilities.sendSuccess(
-            APP_CONSTANTS.STATUS_MSG.ERROR.PASSWORDS_NOT_MATCH,
-            {}
-          );
-        } else if (
-          Utilities.compareHash(newPassword, getUserInformation.password)
-        ) {
-          return Utilities.sendSuccess(
-            APP_CONSTANTS.STATUS_MSG.ERROR.SAME_PASSWORDS,
+            APP_CONSTANTS.STATUS_MSG.ERROR.WRONG_OLD_PASSWORD,
             {}
           );
         }
-        const setNewPassword = Utilities.cryptData(newPassword);
-        await userService.updateData(
-          {
-            _id: authenticatedUser,
-          },
-          {
-            password: setNewPassword,
-            isPasswordReset: true,
-          }
-        );
-        return Utilities.sendSuccess(
-          APP_CONSTANTS.STATUS_MSG.SUCCESS.PASSWORD_UPDATED,
-          {}
-        );
       } else {
         return Utilities.sendSuccess(
-          APP_CONSTANTS.STATUS_MSG.ERROR.WRONG_CREDENTIALS_PASSWORD,
+          APP_CONSTANTS.STATUS_MSG.ERROR.UNAUTHORIZED,
           {}
         );
       }

@@ -63,6 +63,12 @@ let STATUS_MSG = {
       customMessage: "Rewards redeemed successfully!",
       type: "REWARDS_REDEEMED",
     },
+    PASSWORD_UPDATED: {
+      statusCode: 200,
+      customMessage:
+        "Password updated successfully, please login again to continue",
+      type: "PASSWORD_UPDATED",
+    },
   },
   ERROR: {
     UNAUTHORIZED: {
@@ -119,6 +125,16 @@ let STATUS_MSG = {
       statusCode: 400,
       customMessage: "OTP could not be sent, please try again",
       type: "OTP_NOT_SENT",
+    },
+    SAME_PASSWORDS: {
+      statusCode: 400,
+      customMessage: "New password must be different from old password",
+      type: "SAME_PASSWORDS",
+    },
+    WRONG_OLD_PASSWORD: {
+      statusCode: 401,
+      customMessage: "Incorrect old password",
+      type: "WRONG_OLD_PASSWORD",
     },
   },
 };

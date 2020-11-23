@@ -251,7 +251,7 @@ let getUserListByRole = {
 
 let changePassword = {
   method: "PUT",
-  path: "/user/changePassword",
+  path: "/admin/changePassword",
   options: {
     handler: async (request, h) => {
       const result = await userController.changePassword(
@@ -270,7 +270,6 @@ let changePassword = {
       payload: Joi.object({
         currentPassword: Joi.string().required(),
         newPassword: Joi.string().required(),
-        confirmNewPassword: Joi.string().required(),
       }),
     },
   },
@@ -349,7 +348,7 @@ let user = [
   // getUserProfile,
   // markDeleteOrObsolete,
   // getUserListByRole,
-  // changePassword,
+  changePassword,
   // getUserListOfManager,
   // getUserProfileById,
   // getUserProfileByName,
