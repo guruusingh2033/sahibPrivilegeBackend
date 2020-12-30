@@ -3,11 +3,11 @@ const mysql = require("mysql2");
 
 /* dev server mysql connection */
 const pool = mysql.createPool({
-  host: "208.91.198.197",
+  host: "172.105.43.57",
   port: "3306",
-  user: "sahib",
-  password: "Sahib@123#",
-  database: "sahibPrivilege",
+  user: "b201224s_sahib",
+  password: "MlhTBUMelS9PQA",
+  database: "b201224s_sahibprivilege",
   connectionLimit: 100,
 });
 module.exports.connection = pool.promise();
@@ -109,12 +109,11 @@ class MySqlClient {
 
   connect() {
     return mysql.createPool({
-      // host: '67.225.146.161',process.env.DB_USER
-      host: "208.91.198.197",
+      host: "172.105.43.57",
       port: "3306",
-      user: "sahib",
-      password: "Sahib@123#",
-      database: "sahibPrivilege",
+      user: "b201224s_sahib",
+      password: "MlhTBUMelS9PQA",
+      database: "b201224s_sahibprivilege",
       multipleStatements: true,
       charset: "utf8_unicode_ci",
       connectionLimit: 10,
